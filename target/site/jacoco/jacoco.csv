@@ -1,0 +1,12 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+cardmanager,com.bankinc.cardmanager.model.entity,Card,0,52,0,0,0,22,0,15,0,15
+cardmanager,com.bankinc.cardmanager.model.entity,Transaction,0,45,0,0,0,19,0,13,0,13
+cardmanager,com.bankinc.cardmanager.service.impl,CardServiceImpl,0,309,0,18,0,77,0,18,0,9
+cardmanager,com.bankinc.cardmanager.service.impl,TransactionServiceImpl,0,255,0,20,0,61,0,15,0,5
+cardmanager,com.bankinc.cardmanager,CardmanagerApplication,5,3,0,0,2,1,1,1,1,1
+cardmanager,com.bankinc.cardmanager.controller,CardController,0,151,0,0,0,37,0,7,0,7
+cardmanager,com.bankinc.cardmanager.controller,TransactionController,0,107,0,0,0,23,0,5,0,5
+cardmanager,com.bankinc.cardmanager.model.request,RechargeBalanceRequest,0,17,0,0,0,7,0,5,0,5
+cardmanager,com.bankinc.cardmanager.model.request,ActivateCardRequest,0,10,0,0,0,4,0,3,0,3
+cardmanager,com.bankinc.cardmanager.model.request,PurchaseRequest,0,17,0,0,0,7,0,5,0,5
+cardmanager,com.bankinc.cardmanager.model.request,AnulateTransactionRequest,0,17,0,0,0,7,0,5,0,5

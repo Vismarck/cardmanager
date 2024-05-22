@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CardController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">cardmanager</a> &gt; <a href="index.source.html" class="el_package">com.bankinc.cardmanager.controller</a> &gt; <span class="el_source">CardController.java</span></div><h1>CardController.java</h1><pre class="source lang-java linenums">package com.bankinc.cardmanager.controller;
+
+import com.bankinc.cardmanager.model.entity.Card;
+import com.bankinc.cardmanager.model.request.ActivateCardRequest;
+import com.bankinc.cardmanager.model.request.RechargeBalanceRequest;
+import com.bankinc.cardmanager.service.CardService;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+@RestController
+@RequestMapping(&quot;/card&quot;)
+<span class="fc" id="L17">public class CardController {</span>
+	
+<span class="fc" id="L19">	private static final Logger log = LoggerFactory.getLogger(CardController.class);</span>
+
+    @Autowired
+    private CardService cardService;
+    
+    
+    @GetMapping(&quot;/{productId}/number&quot;)
+    public ResponseEntity&lt;String&gt; generateCardNumber(@PathVariable String productId, @RequestParam String cardHolderName) {
+<span class="fc" id="L27">        log.info(&quot;Generando número de tarjeta productId: {} y cardholdername: {}&quot;, productId, cardHolderName);</span>
+        try {
+<span class="fc" id="L29">            Card newCard = cardService.createCard(productId, cardHolderName);</span>
+<span class="fc" id="L30">            log.info(&quot;Id de tarjeta generada: {}&quot;, newCard.getCardId());</span>
+<span class="fc" id="L31">            return ResponseEntity.ok(newCard.getCardId());</span>
+<span class="fc" id="L32">        } catch (Exception e) {</span>
+<span class="fc" id="L33">            log.error(&quot;Error al generar el número de tarjeta: {}&quot;, e.getMessage());</span>
+<span class="fc" id="L34">            return ResponseEntity.badRequest().body(e.getMessage());</span>
+        }
+    }
+
+    @PostMapping(&quot;/enroll&quot;)
+    public ResponseEntity&lt;String&gt; activateCard(@RequestBody ActivateCardRequest request) {
+<span class="fc" id="L40">        log.info(&quot;Activar tarjeta ID: {}&quot;, request.getCardId());</span>
+        try {
+<span class="fc" id="L42">            cardService.activateCard(request.getCardId());</span>
+<span class="fc" id="L43">            log.info(&quot;Tarjeta activada exitosamente&quot;);</span>
+<span class="fc" id="L44">            return ResponseEntity.ok(&quot;Tarjeta activada exitosamente&quot;);</span>
+<span class="fc" id="L45">        } catch (Exception e) {</span>
+<span class="fc" id="L46">            log.error(&quot;Error al activar la tarjeta: {}&quot;, e.getMessage());</span>
+<span class="fc" id="L47">            return ResponseEntity.badRequest().body(e.getMessage());</span>
+        }
+    }
+
+    @DeleteMapping(&quot;/{cardId}&quot;)
+    public ResponseEntity&lt;String&gt; blockCard(@PathVariable String cardId) {
+<span class="fc" id="L53">        log.info(&quot;Tarjeta de bloqueo ID: {}&quot;, cardId);</span>
+        try {
+<span class="fc" id="L55">            cardService.blockCard(cardId);</span>
+<span class="fc" id="L56">            log.info(&quot;Tarjeta bloqueada exitosamente&quot;);</span>
+<span class="fc" id="L57">            return ResponseEntity.ok(&quot;Tarjeta bloqueada exitosamente&quot;);</span>
+<span class="fc" id="L58">        } catch (Exception e) {</span>
+<span class="fc" id="L59">            log.error(&quot;Error al bloquear la tarjeta: {}&quot;, e.getMessage());</span>
+<span class="fc" id="L60">            return ResponseEntity.badRequest().body(e.getMessage());</span>
+        }
+    }
+
+    @PostMapping(&quot;/balance&quot;)
+    public ResponseEntity&lt;String&gt; rechargeBalance(@RequestBody RechargeBalanceRequest request) {
+<span class="fc" id="L66">        log.info(&quot;Recarga de saldo para tarjeta ID: {} con cantidad: {}&quot;, request.getCardId(), request.getBalance());</span>
+        try {
+<span class="fc" id="L68">            cardService.rechargeBalance(request.getCardId(), request.getBalance());</span>
+<span class="fc" id="L69">            log.info(&quot;Saldo recargado exitosamente&quot;);</span>
+<span class="fc" id="L70">            return ResponseEntity.ok(&quot;Saldo recargado exitosamente&quot;);</span>
+<span class="fc" id="L71">        } catch (Exception e) {</span>
+<span class="fc" id="L72">            log.error(&quot;Error al recargar saldo: {}&quot;, e.getMessage());</span>
+<span class="fc" id="L73">            return ResponseEntity.badRequest().body(e.getMessage());</span>
+        }
+    }
+
+    @GetMapping(&quot;/balance/{cardId}&quot;)
+    public ResponseEntity&lt;?&gt; getBalance(@PathVariable String cardId) {
+<span class="fc" id="L79">        log.info(&quot;Obteniendo saldo para la tarjeta ID: {}&quot;, cardId);</span>
+        try {
+<span class="fc" id="L81">            double balance = cardService.getBalance(cardId);</span>
+<span class="fc" id="L82">            log.info(&quot;Saldo recuperado: {}&quot;, balance);</span>
+<span class="fc" id="L83">            return ResponseEntity.ok(balance);</span>
+<span class="fc" id="L84">        } catch (Exception e) {</span>
+<span class="fc" id="L85">            log.error(&quot;Error al obtener saldo: {}&quot;, e.getMessage());</span>
+<span class="fc" id="L86">            return ResponseEntity.badRequest().body(e.getMessage());</span>
+        }
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

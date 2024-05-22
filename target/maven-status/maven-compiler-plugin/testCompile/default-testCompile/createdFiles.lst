@@ -1,0 +1,6 @@
+com\bankinc\cardmanager\controller\TransactionControllerTest.class
+com\bankinc\cardmanager\BaseTest.class
+com\bankinc\cardmanager\CardmanagerApplicationTests.class
+com\bankinc\cardmanager\controller\CardControllerTest.class
+com\bankinc\cardmanager\service\impl\TransactionServiceImplTest.class
+com\bankinc\cardmanager\service\impl\CardServiceImplTest.class

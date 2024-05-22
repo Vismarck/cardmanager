@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TransactionServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">cardmanager</a> &gt; <a href="index.source.html" class="el_package">com.bankinc.cardmanager.service.impl</a> &gt; <span class="el_source">TransactionServiceImpl.java</span></div><h1>TransactionServiceImpl.java</h1><pre class="source lang-java linenums">package com.bankinc.cardmanager.service.impl;
+
+import com.bankinc.cardmanager.model.entity.Card;
+import com.bankinc.cardmanager.model.entity.Transaction;
+import com.bankinc.cardmanager.repository.CardRepository;
+import com.bankinc.cardmanager.repository.TransactionRepository;
+import com.bankinc.cardmanager.service.TransactionService;
+
+import jakarta.transaction.Transactional;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Optional;
+
+@Service
+<span class="fc" id="L21">public class TransactionServiceImpl implements TransactionService {</span>
+	
+<span class="fc" id="L23">	private static final Logger log = LoggerFactory.getLogger(TransactionServiceImpl.class);</span>
+	
+    @Autowired
+    private CardRepository cardRepository;
+
+    @Autowired
+    private TransactionRepository transactionRepository;
+
+
+    public Transaction getTransactionById(Long transactionId) throws Exception {
+<span class="fc" id="L33">    	log.info(&quot;Buscando transacción ID: {}&quot;, transactionId);</span>
+<span class="fc" id="L34">        Optional&lt;Transaction&gt; transaction = transactionRepository.findById(transactionId);</span>
+<span class="fc bfc" id="L35" title="All 2 branches covered.">        if (!transaction.isPresent()) {</span>
+<span class="fc" id="L36">        	log.error(&quot;Transacción no encontrada ID: {}&quot;, transactionId);</span>
+<span class="fc" id="L37">            throw new Exception(&quot;Transacción no encontrada&quot;);</span>
+        }
+<span class="fc" id="L39">        return transaction.get();</span>
+    }
+    
+    @Transactional
+    public Transaction purchase(String cardId, double price) throws Exception {
+<span class="fc" id="L44">    	log.info(&quot;Iniciando compra con tarjeta ID: {}, por importe: {}&quot;, cardId, price);</span>
+<span class="fc" id="L45">        Optional&lt;Card&gt; optionalCard = cardRepository.findById(cardId);</span>
+<span class="fc bfc" id="L46" title="All 2 branches covered.">        if (!optionalCard.isPresent()) {</span>
+<span class="fc" id="L47">        	log.error(&quot;No se encontró tarjeta ID: {}&quot;, cardId);</span>
+<span class="fc" id="L48">            throw new Exception(&quot;Tarjeta no encontrada&quot;);</span>
+        }
+
+<span class="fc" id="L51">        Card card = optionalCard.get();</span>
+<span class="fc bfc" id="L52" title="All 2 branches covered.">        if (!card.isActive()) {</span>
+<span class="fc" id="L53">        	log.error(&quot;La tarjeta no está activada ID: {}&quot;, cardId);</span>
+<span class="fc" id="L54">            throw new Exception(&quot;La tarjeta no está activada&quot;);</span>
+        }
+
+<span class="fc bfc" id="L57" title="All 2 branches covered.">        if (card.getExpirationDate().isBefore(LocalDate.now())) {</span>
+<span class="fc" id="L58">        	log.error(&quot;La tarjeta ha caducado ID: {}&quot;, cardId);</span>
+<span class="fc" id="L59">            throw new Exception(&quot;La tarjeta ha caducado&quot;);</span>
+        }
+
+<span class="fc bfc" id="L62" title="All 2 branches covered.">        if (card.isBlocked()) {</span>
+<span class="fc" id="L63">        	log.error(&quot;La tarjeta está bloqueada ID: {}&quot;, cardId);</span>
+<span class="fc" id="L64">            throw new Exception(&quot;La tarjeta está bloqueada&quot;);</span>
+        }
+
+<span class="fc bfc" id="L67" title="All 2 branches covered.">        if (card.getBalance() &lt; price) {</span>
+<span class="fc" id="L68">        	log.error(&quot;Saldo insuficiente ID: {}&quot;, cardId);</span>
+<span class="fc" id="L69">            throw new Exception(&quot;Saldo insuficiente&quot;);</span>
+        }
+
+<span class="fc" id="L72">        card.setBalance(card.getBalance() - price);</span>
+<span class="fc" id="L73">        cardRepository.save(card);</span>
+
+<span class="fc" id="L75">        Transaction transaction = new Transaction();</span>
+<span class="fc" id="L76">        transaction.setCard(card);</span>
+<span class="fc" id="L77">        transaction.setAmount(price);</span>
+<span class="fc" id="L78">        transaction.setTransactionDate(LocalDateTime.now());</span>
+<span class="fc" id="L79">        transaction.setStatus(&quot;COMPLETED&quot;);</span>
+
+<span class="fc" id="L81">        Transaction savedTransaction = transactionRepository.save(transaction);</span>
+<span class="fc" id="L82">        log.info(&quot;Transacción completada con éxito ID de transacción: {}&quot;, savedTransaction.getId());</span>
+<span class="fc" id="L83">        return savedTransaction;</span>
+    }
+
+    @Transactional
+    public void anulateTransaction(String transactionId, String cardId) throws Exception {
+<span class="fc" id="L88">    	Long transactionId_ = Long.parseLong(transactionId);</span>
+<span class="fc" id="L89">        Optional&lt;Transaction&gt; optionalTransaction = transactionRepository.findById(transactionId_);</span>
+<span class="fc bfc" id="L90" title="All 2 branches covered.">        if (!optionalTransaction.isPresent()) {</span>
+<span class="fc" id="L91">        	log.error(&quot;Transacción no encontrada ID de transacción: {}&quot;, transactionId);</span>
+<span class="fc" id="L92">            throw new Exception(&quot;Transacción no encontrada&quot;);</span>
+        }
+
+<span class="fc" id="L95">        Transaction transaction = optionalTransaction.get();</span>
+
+<span class="fc bfc" id="L97" title="All 2 branches covered.">        if (transaction.isAnulled()) {</span>
+<span class="fc" id="L98">        	log.error(&quot;Intento de anular una transacción ya anulada ID de transacción: {}&quot;, transactionId);</span>
+<span class="fc" id="L99">            throw new Exception(&quot;Transacción ya anulada&quot;);</span>
+        }
+
+<span class="fc" id="L102">        LocalDateTime now = LocalDateTime.now();</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">        if (transaction.getTransactionDate().isBefore(now.minusHours(24))) {</span>
+<span class="fc" id="L104">        	log.error(&quot;La transacción tiene más de 24 hora ID de transacción: {}&quot;, transactionId);</span>
+<span class="fc" id="L105">            throw new Exception(&quot;La transacción tiene más de 24 horas&quot;);</span>
+        }
+
+<span class="fc bfc" id="L108" title="All 2 branches covered.">        if (!transaction.getCard().getCardId().equals(cardId)) {</span>
+<span class="fc" id="L109">        	log.error(&quot;La transacción no pertenece a la tarjeta especificada ID de transacción: {}&quot;, transactionId);</span>
+<span class="fc" id="L110">            throw new Exception(&quot;La transacción no pertenece a la tarjeta especificada&quot;);</span>
+        }
+
+<span class="fc" id="L113">        transaction.setAnulled(true);</span>
+<span class="fc" id="L114">        transaction.setStatus(&quot;ANULLED&quot;);</span>
+
+<span class="fc" id="L116">        Card card = transaction.getCard();</span>
+<span class="fc" id="L117">        double newBalance = card.getBalance() + transaction.getAmount();</span>
+<span class="fc" id="L118">        card.setBalance(newBalance);</span>
+
+<span class="fc" id="L120">        transactionRepository.save(transaction);</span>
+<span class="fc" id="L121">        cardRepository.save(card);</span>
+<span class="fc" id="L122">        log.info(&quot;Transacción anulada con éxito, ID: {}&quot;, transaction.getId());</span>
+<span class="fc" id="L123">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
